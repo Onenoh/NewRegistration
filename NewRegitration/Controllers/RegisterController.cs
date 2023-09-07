@@ -44,5 +44,72 @@ namespace NewRegitration.Controllers
 
             return BadRequest(result.Errors);
         }
+
+        [HttpGet]
+        [Route("Get")]
+        public async Task<IActionResult> GetUserById(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(user);
+        }
+
+        [HttpPut]
+        [Route("Put")]
+        public async Task<IActionResult> UpdateUser(string email, string newEmail, string newFirstName, string newLastName)
+        {
+            ApplicationUser user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            
+            user.Email = newEmail;
+            user.FirstName = newFirstName;
+            user.LastName = newLastName;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                return Ok("User updated successfully.");
+            }
+            else
+            {
+                return BadRequest(result.Errors);
+            }
+        }
+
+
+        [HttpDelete]
+        [Route("Delete")]
+        public async Task<IActionResult> DeleteUser(string email)
+        {
+            ApplicationUser user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (result.Succeeded)
+            {
+                return Ok("User deleted successfully.");
+            }
+            else
+            {
+                return BadRequest(result.Errors);
+            }
+        }
+
     }
 }
