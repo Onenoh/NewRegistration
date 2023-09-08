@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NewRegitration.Authentication;
 using NewRegitration.Models;
+using NewRegitration.Repository;
 using Registration.Repository;
 using System.Text;
 
@@ -23,6 +24,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<UserManager<ApplicationUser>>();
+builder.Services.AddScoped<ITokenGenerator, TokenGenerator>();
+builder.Services.AddScoped<ILoginAuth, LoginAuth>();
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
 builder.Services.AddAuthentication(options =>
@@ -42,7 +45,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["JWTSettings:Issuer"],
         IssuerSigningKey =
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSettings:SecretKey"])),
-        ClockSkew = TimeSpan.FromMinutes(5)
+        ClockSkew = TimeSpan.FromMinutes(0)
     };
 });
 
