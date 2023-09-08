@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NewRegitration.Authentication;
 using NewRegitration.Models;
+using Registration.Repository;
 using System.Threading.Tasks;
 
 namespace NewRegitration.Controllers
@@ -10,32 +11,25 @@ namespace NewRegitration.Controllers
     [ApiController]
     public class RegisterController : ControllerBase
     {
+        private readonly IPersonRepository _personRepository;
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public RegisterController(UserManager<ApplicationUser> userManager)
+        public RegisterController(IPersonRepository personRepository, UserManager<ApplicationUser> userManager)
         {
+            _personRepository = personRepository;
             _userManager = userManager;
         }
 
         [HttpPost]
-        [Route("Register")]
+        [Route("Post")]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
             
+            var result = await _personRepository.RegisterAsync(registerDTO);
+
             if (registerDTO.Password != registerDTO.ConfirmPassword)
             {
                 return BadRequest("Password and confirm password do not match.");
             }
-
-            var user = new ApplicationUser()
-            {
-                FirstName = registerDTO.FirstName,
-                LastName = registerDTO.LastName,
-                Email = registerDTO.Email,
-                UserName = registerDTO.Email
-            };
-
-            var result = await _userManager.CreateAsync(user, registerDTO.Password);
 
             if (result.Succeeded)
             {
@@ -47,9 +41,9 @@ namespace NewRegitration.Controllers
 
         [HttpGet]
         [Route("Get")]
-        public async Task<IActionResult> GetUserById(string email)
+        public async Task<IActionResult> GetUserByEmail(string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _personRepository.GetUserByEmailAsync(email);
 
             if (user == null)
             {
@@ -61,21 +55,14 @@ namespace NewRegitration.Controllers
 
         [HttpPut]
         [Route("Put")]
-        public async Task<IActionResult> UpdateUser(string email, string newEmail, string newFirstName, string newLastName)
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDTO updateUserDTO)
         {
-            ApplicationUser user = await _userManager.FindByEmailAsync(email);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            
-            user.Email = newEmail;
-            user.FirstName = newFirstName;
-            user.LastName = newLastName;
-
-            var result = await _userManager.UpdateAsync(user);
+            var result = await _personRepository.UpdateUserAsync(
+                updateUserDTO.Email,
+                updateUserDTO.NewEmail,
+                updateUserDTO.NewFirstName,
+                updateUserDTO.NewLastName
+            );
 
             if (result.Succeeded)
             {
@@ -92,14 +79,7 @@ namespace NewRegitration.Controllers
         [Route("Delete")]
         public async Task<IActionResult> DeleteUser(string email)
         {
-            ApplicationUser user = await _userManager.FindByEmailAsync(email);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            var result = await _userManager.DeleteAsync(user);
+            var result = await _personRepository.DeleteUserAsync(email);
 
             if (result.Succeeded)
             {
@@ -110,6 +90,6 @@ namespace NewRegitration.Controllers
                 return BadRequest(result.Errors);
             }
         }
-
     }
+
 }

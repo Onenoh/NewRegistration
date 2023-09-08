@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NewRegitration.Authentication;
 using NewRegitration.Models;
+using Registration.Repository;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,29 +22,30 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-//    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-//});
-//}).AddJwtBearer(options =>
-//{
-//    options.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateAudience = true,
-//        ValidateIssuer = true,
-//        ValidateLifetime = true,
-//        ValidateIssuerSigningKey = true,
-//        ValidAudience = builder.Configuration["JWTSettings:Audience"],
-//        ValidIssuer = builder.Configuration["JWTSettings:Issuer"],
-//        IssuerSigningKey =
-//            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSettings:SecretKey"])),
-//        ClockSkew = TimeSpan.FromMinutes(5)
-//    };
-//});
-
 builder.Services.AddScoped<UserManager<ApplicationUser>>();
+builder.Services.AddScoped<IPersonRepository, PersonRepository>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateAudience = true,
+        ValidateIssuer = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidAudience = builder.Configuration["JWTSettings:Audience"],
+        ValidIssuer = builder.Configuration["JWTSettings:Issuer"],
+        IssuerSigningKey =
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSettings:SecretKey"])),
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+});
+
 
 builder.Services.AddControllers();
 
@@ -63,6 +65,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
